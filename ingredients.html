@@ -1,0 +1,278 @@
+<!DOCTYPE html>
+<html lang="ko">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>🛒 식재료 관리</title>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link href="https://fonts.googleapis.com/css2?family=Noto+Serif+KR:wght@300;400;600&family=DM+Serif+Display:ital@0;1&family=Noto+Sans+KR:wght@300;400;500&display=swap" rel="stylesheet">
+<style>
+  :root {
+    --cream: #f7f3ec;
+    --warm-white: #fdfaf5;
+    --ink: #1c1714;
+    --ink-light: #5a4e44;
+    --ink-muted: #9b8f84;
+    --terracotta: #c4714a;
+    --terracotta-light: #e8a882;
+    --sage: #7a9e7e;
+    --sage-light: #b5cfb7;
+    --butter: #e8c96e;
+    --border: #e0d5c8;
+    --shadow: rgba(28,23,20,0.08);
+    --red: #e05c5c;
+    --yellow: #d4a017;
+    --green: #5a9e6f;
+  }
+  * { margin: 0; padding: 0; box-sizing: border-box; }
+  body { font-family: 'Noto Sans KR', sans-serif; background: var(--cream); color: var(--ink); min-height: 100vh; font-size: 14px; }
+
+  header { background: var(--warm-white); border-bottom: 1px solid var(--border); padding: 20px 20px 0; position: sticky; top: 0; z-index: 100; box-shadow: 0 2px 12px var(--shadow); }
+  .header-top { display: flex; align-items: center; gap: 12px; margin-bottom: 16px; }
+  .back-btn { font-size: 13px; color: var(--ink-muted); text-decoration: none; display: flex; align-items: center; gap: 4px; }
+  .back-btn:hover { color: var(--terracotta); }
+  .site-title { font-family: 'DM Serif Display', serif; font-size: 22px; color: var(--terracotta); }
+
+  .filter-row { display: flex; gap: 6px; overflow-x: auto; padding-bottom: 14px; scrollbar-width: none; }
+  .filter-row::-webkit-scrollbar { display: none; }
+  .filter-btn { flex-shrink: 0; padding: 5px 13px; border-radius: 20px; border: 1.5px solid var(--border); background: transparent; font-family: 'Noto Sans KR', sans-serif; font-size: 12px; color: var(--ink-light); cursor: pointer; transition: all 0.18s; white-space: nowrap; }
+  .filter-btn:hover { border-color: var(--terracotta); color: var(--terracotta); }
+  .filter-btn.active { background: var(--terracotta); border-color: var(--terracotta); color: white; }
+  .filter-btn.shop-btn.active { background: var(--red); border-color: var(--red); }
+  .filter-btn.shop-btn:hover { border-color: var(--red); color: var(--red); }
+
+  main { padding: 16px; }
+
+  .result-info { font-size: 12px; color: var(--ink-muted); margin-bottom: 12px; }
+
+  /* 쇼핑 목록 뷰 */
+  .shopping-banner {
+    background: linear-gradient(135deg, #fff5f5, #fff0f0);
+    border: 1.5px solid #f5c6c6;
+    border-radius: 14px;
+    padding: 14px 16px;
+    margin-bottom: 16px;
+    display: none;
+  }
+  .shopping-banner.show { display: block; }
+  .shopping-banner-title { font-size: 13px; font-weight: 500; color: var(--red); margin-bottom: 8px; }
+  .shopping-item { display: flex; align-items: center; gap: 8px; padding: 6px 0; border-bottom: 1px solid #fce8e8; font-size: 13px; }
+  .shopping-item:last-child { border-bottom: none; }
+  .shopping-item-name { flex: 1; color: var(--ink); }
+  .shopping-item-cat { font-size: 11px; color: var(--ink-muted); }
+  .shopping-item-shop { font-size: 11px; color: var(--terracotta); }
+
+  /* 카테고리별 섹션 */
+  .category-section { margin-bottom: 20px; }
+  .category-title { font-family: 'DM Serif Display', serif; font-size: 15px; color: var(--ink); margin-bottom: 10px; padding-bottom: 6px; border-bottom: 1px solid var(--border); display: flex; align-items: center; gap: 6px; }
+
+  .ingredient-list { display: flex; flex-direction: column; gap: 8px; }
+
+  .ingredient-card { background: var(--warm-white); border-radius: 12px; padding: 12px 14px; border: 1px solid var(--border); display: flex; align-items: center; gap: 12px; transition: all 0.18s; }
+  .ingredient-card:hover { box-shadow: 0 3px 12px var(--shadow); }
+
+  .stock-dot { width: 10px; height: 10px; border-radius: 50%; flex-shrink: 0; }
+  .stock-충분 { background: var(--green); }
+  .stock-곧 { background: var(--yellow); }
+  .stock-없음 { background: var(--red); }
+
+  .ingredient-info { flex: 1; min-width: 0; }
+  .ingredient-name { font-size: 14px; font-weight: 500; color: var(--ink); margin-bottom: 2px; }
+  .ingredient-meta { font-size: 11px; color: var(--ink-muted); display: flex; gap: 8px; flex-wrap: wrap; }
+  .ingredient-shop { color: var(--terracotta); }
+  .ingredient-price { color: var(--ink-muted); }
+
+  .ingredient-right { text-align: right; flex-shrink: 0; }
+  .stock-badge { font-size: 10px; padding: 2px 8px; border-radius: 10px; }
+  .badge-충분 { background: #eef7f1; color: var(--green); }
+  .badge-곧 { background: #fef9ec; color: var(--yellow); }
+  .badge-없음 { background: #fff0f0; color: var(--red); }
+
+  .ingredient-memo { font-size: 11px; color: var(--ink-muted); margin-top: 4px; line-height: 1.4; }
+  .ingredient-link { font-size: 11px; color: var(--terracotta); text-decoration: none; }
+  .ingredient-link:hover { text-decoration: underline; }
+
+  /* 로딩 */
+  .loading { text-align: center; padding: 48px 20px; color: var(--ink-muted); }
+  .loading-emoji { font-size: 32px; margin-bottom: 10px; animation: spin 1.5s linear infinite; display: inline-block; }
+  @keyframes spin { from { transform: rotate(0deg); } to { transform: rotate(360deg); } }
+
+  .error { text-align: center; padding: 32px; color: var(--red); font-size: 13px; }
+
+  /* 노션 링크 */
+  .notion-link { display: flex; align-items: center; justify-content: center; gap: 6px; margin-top: 20px; padding: 12px; background: var(--warm-white); border: 1px solid var(--border); border-radius: 12px; text-decoration: none; color: var(--ink-light); font-size: 12px; }
+  .notion-link:hover { border-color: var(--terracotta); color: var(--terracotta); }
+</style>
+</head>
+<body>
+
+<header>
+  <div class="header-top">
+    <a href="index.html" class="back-btn">← 요리일기</a>
+    <span class="site-title">식재료 관리</span>
+  </div>
+  <div class="filter-row" id="filterRow">
+    <button class="filter-btn shop-btn active" onclick="setFilter('shop')">🛒 쇼핑 필요</button>
+    <button class="filter-btn active" onclick="setFilter('all')">전체</button>
+    <button class="filter-btn" onclick="setFilter('소스·양념')">🧂 소스·양념</button>
+    <button class="filter-btn" onclick="setFilter('고기·생선')">🥩 고기·생선</button>
+    <button class="filter-btn" onclick="setFilter('채소·나물')">🥬 채소·나물</button>
+    <button class="filter-btn" onclick="setFilter('오일·식초')">🫙 오일·식초</button>
+    <button class="filter-btn" onclick="setFilter('육수·베이스')">🍲 육수·베이스</button>
+    <button class="filter-btn" onclick="setFilter('유제품·대체유')">🥛 유제품·대체유</button>
+    <button class="filter-btn" onclick="setFilter('기타')">📦 기타</button>
+  </div>
+</header>
+
+<main id="main">
+  <div class="loading">
+    <div class="loading-emoji">🥄</div>
+    <div>식재료 불러오는 중...</div>
+  </div>
+</main>
+
+<script>
+  let allItems = [];
+  let currentFilter = 'shop';
+
+  const CAT_ICONS = {
+    '소스·양념': '🧂', '고기·생선': '🥩', '채소·나물': '🥬',
+    '오일·식초': '🫙', '육수·베이스': '🍲', '유제품·대체유': '🥛', '기타': '📦'
+  };
+
+  function setFilter(key) {
+    currentFilter = key;
+    document.querySelectorAll('.filter-btn').forEach(b => b.classList.remove('active'));
+    // 해당 버튼 active
+    document.querySelectorAll('.filter-btn').forEach(b => {
+      if (
+        (key === 'shop' && b.classList.contains('shop-btn')) ||
+        (key === 'all' && b.textContent === '전체') ||
+        b.textContent.includes(key)
+      ) b.classList.add('active');
+    });
+    render();
+  }
+
+  function stockClass(s) {
+    if (s.includes('충분')) return '충분';
+    if (s.includes('곧')) return '곧';
+    return '없음';
+  }
+
+  function stockBadgeText(s) {
+    if (s.includes('충분')) return '🟢 충분';
+    if (s.includes('곧')) return '🟡 곧 살 때 됨';
+    return '🔴 없음';
+  }
+
+  function render() {
+    const main = document.getElementById('main');
+    let items = allItems;
+
+    if (currentFilter === 'shop') {
+      items = items.filter(i => !i.재고상태.includes('충분'));
+      if (items.length === 0) {
+        main.innerHTML = `<div class="loading"><div style="font-size:36px">🎉</div><div style="margin-top:10px;font-size:14px;color:var(--ink-light)">살 게 없어요! 재고 충분!</div></div>`;
+        return;
+      }
+      // 쇼핑 목록 뷰
+      const noStock = items.filter(i => i.재고상태.includes('없음'));
+      const soon = items.filter(i => i.재고상태.includes('곧'));
+      let html = '';
+      if (noStock.length) {
+        html += `<div class="shopping-banner show">
+          <div class="shopping-banner-title">🔴 없음 (${noStock.length}개)</div>
+          ${noStock.map(i => `
+            <div class="shopping-item">
+              <span class="shopping-item-name">${i.이름}</span>
+              <span class="shopping-item-cat">${i.카테고리}</span>
+              ${i.구입처 ? `<span class="shopping-item-shop">${i.구입처}</span>` : ''}
+            </div>
+          `).join('')}
+        </div>`;
+      }
+      if (soon.length) {
+        html += `<div class="shopping-banner show" style="background:linear-gradient(135deg,#fffdf0,#fff9e6);border-color:#f0d98a;">
+          <div class="shopping-banner-title" style="color:var(--yellow)">🟡 곧 살 때 됨 (${soon.length}개)</div>
+          ${soon.map(i => `
+            <div class="shopping-item" style="border-bottom-color:#faefc0">
+              <span class="shopping-item-name">${i.이름}</span>
+              <span class="shopping-item-cat">${i.카테고리}</span>
+              ${i.구입처 ? `<span class="shopping-item-shop">${i.구입처}</span>` : ''}
+            </div>
+          `).join('')}
+        </div>`;
+      }
+      html += notionLinkHtml();
+      main.innerHTML = html;
+      return;
+    }
+
+    // 카테고리 필터
+    if (currentFilter !== 'all') {
+      items = items.filter(i => i.카테고리 === currentFilter);
+    }
+
+    if (items.length === 0) {
+      main.innerHTML = `<div class="loading"><div style="font-size:32px">🥄</div><div style="margin-top:8px">항목이 없어요</div></div>`;
+      return;
+    }
+
+    // 카테고리별 그룹핑
+    const groups = {};
+    items.forEach(i => {
+      const cat = i.카테고리 || '기타';
+      if (!groups[cat]) groups[cat] = [];
+      groups[cat].push(i);
+    });
+
+    let html = `<div class="result-info">${items.length}개의 식재료</div>`;
+    Object.entries(groups).forEach(([cat, list]) => {
+      html += `<div class="category-section">
+        <div class="category-title">${CAT_ICONS[cat] || '📦'} ${cat}</div>
+        <div class="ingredient-list">
+          ${list.map(i => {
+            const sc = stockClass(i.재고상태);
+            return `<div class="ingredient-card">
+              <div class="stock-dot stock-${sc}"></div>
+              <div class="ingredient-info">
+                <div class="ingredient-name">${i.이름}</div>
+                <div class="ingredient-meta">
+                  ${i.구입처 ? `<span class="ingredient-shop">${i.구입처}</span>` : ''}
+                  ${i.가격 ? `<span class="ingredient-price">${i.가격}</span>` : ''}
+                </div>
+                ${i.메모 ? `<div class="ingredient-memo">${i.메모}</div>` : ''}
+                ${i.링크 ? `<a href="${i.링크}" target="_blank" class="ingredient-link">🔗 구입 링크</a>` : ''}
+              </div>
+              <div class="ingredient-right">
+                <span class="stock-badge badge-${sc}">${stockBadgeText(i.재고상태)}</span>
+              </div>
+            </div>`;
+          }).join('')}
+        </div>
+      </div>`;
+    });
+    html += notionLinkHtml();
+    main.innerHTML = html;
+  }
+
+  function notionLinkHtml() {
+    return `<a href="https://www.notion.so/e8feb71f6cba4a7dab56639a041cbf23" target="_blank" class="notion-link">
+      📝 노션에서 재고 수정하기
+    </a>`;
+  }
+
+  // 데이터 로드
+  fetch('/.netlify/functions/ingredients')
+    .then(r => r.json())
+    .then(data => {
+      allItems = data;
+      render();
+    })
+    .catch(() => {
+      document.getElementById('main').innerHTML = `<div class="error">데이터를 불러오지 못했어요 😢<br>잠시 후 다시 시도해주세요</div>`;
+    });
+</script>
+</body>
+</html>
