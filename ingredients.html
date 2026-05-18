@@ -241,6 +241,7 @@
                 <div class="ingredient-meta">
                   ${i.구입처 ? `<span class="ingredient-shop">${i.구입처}</span>` : ''}
                   ${i.가격 ? `<span class="ingredient-price">${i.가격}</span>` : ''}
+                  ${i.마지막구매일 ? `<span style="color:var(--ink-muted)">📅 ${i.마지막구매일}</span>` : ''}
                 </div>
                 ${i.메모 ? `<div class="ingredient-memo">${i.메모}</div>` : ''}
                 ${i.링크 ? `<a href="${i.링크}" target="_blank" class="ingredient-link">🔗 구입 링크</a>` : ''}

@@ -30,6 +30,7 @@ exports.handler = async () => {
       가격: page.properties["가격"]?.rich_text?.[0]?.plain_text || "",
       링크: page.properties["링크"]?.url || "",
       메모: page.properties["메모"]?.rich_text?.[0]?.plain_text || "",
+      마지막구매일: page.properties["마지막 구매일"]?.date?.start || "",
     }));
 
     return {
