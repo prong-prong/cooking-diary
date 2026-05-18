@@ -357,7 +357,11 @@
     document.getElementById('modalCategory').textContent = r.category;
     document.getElementById('modalIngBadge').textContent = getIngLabel(r);
     document.getElementById('modalTitle').textContent = r.name;
-    document.getElementById('modalDate').textContent = r.date;
+
+    // 날짜 + 일기 바로가기 버튼
+    const hasDiary = DATA.diary.some(d => d.date === r.date);
+    document.getElementById('modalDate').innerHTML = r.date +
+      (hasDiary ? ` <button onclick="jumpToDiary('${r.date}')" style="margin-left:8px;font-size:11px;padding:2px 9px;border-radius:10px;border:1px solid var(--terracotta-light);background:transparent;color:var(--terracotta);cursor:pointer;">📝 일기 보기</button>` : '');
 
     let body = '';
     if (r.memo) body += `<div class="modal-memo">${r.memo}</div>`;
@@ -376,6 +380,23 @@
     }
     document.getElementById('modalBody').innerHTML = body;
     document.getElementById('recipeModal').classList.add('open');
+  }
+
+  function jumpToDiary(date) {
+    // 레시피 모달 닫기
+    document.getElementById('recipeModal').classList.remove('open');
+    // 일기 탭으로 전환
+    currentTab = 'diary';
+    currentCat = 'all'; currentIng = 'all'; searchQuery = '';
+    document.getElementById('searchInput').value = '';
+    document.querySelectorAll('.tab-btn').forEach(b => b.classList.remove('active'));
+    document.querySelectorAll('.tab-btn')[1].classList.add('active');
+    document.getElementById('recipeView').style.display = 'none';
+    document.getElementById('diaryView').style.display = '';
+    document.getElementById('recipeFilters').style.display = 'none';
+    renderCatFilters(); renderIngFilters(); renderActiveChips(); renderDiary();
+    // 해당 날짜 일기 모달 열기
+    setTimeout(() => openDiaryModal(date), 100);
   }
 
   function openDiaryModal(date) {
