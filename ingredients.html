@@ -56,11 +56,12 @@
   }
   .shopping-banner.show { display: block; }
   .shopping-banner-title { font-size: 13px; font-weight: 500; color: var(--red); margin-bottom: 8px; }
-  .shopping-item { display: flex; align-items: center; gap: 8px; padding: 6px 0; border-bottom: 1px solid #fce8e8; font-size: 13px; }
+  .shopping-item { display: flex; align-items: center; gap: 8px; padding: 6px 0; border-bottom: 1px solid #fce8e8; font-size: 13px; flex-wrap: wrap; }
   .shopping-item:last-child { border-bottom: none; }
-  .shopping-item-name { flex: 1; color: var(--ink); }
+  .shopping-item-name { flex: 1; color: var(--ink); min-width: 0; }
   .shopping-item-cat { font-size: 11px; color: var(--ink-muted); }
   .shopping-item-shop { font-size: 11px; color: var(--terracotta); }
+  .shopping-item-stock { font-size: 11px; color: var(--ink); font-weight: 500; background: rgba(196,113,74,0.1); padding: 2px 7px; border-radius: 8px; }
 
   /* 카테고리별 섹션 */
   .category-section { margin-bottom: 20px; }
@@ -185,8 +186,7 @@
           <div class="shopping-banner-title">🔴 없음 (${noStock.length}개)</div>
           ${noStock.map(i => `
             <div class="shopping-item">
-              <span class="shopping-item-name">${i.이름}</span>
-              ${i.재고수 !== null ? `<span style="font-size:11px;color:var(--ink-light);font-weight:500">📦 ${i.재고수}</span>` : ''}
+              <span class="shopping-item-name">${i.이름}${i.재고수 !== null ? ` <span class="shopping-item-stock">📦 ${i.재고수}</span>` : ''}</span>
               <span class="shopping-item-cat">${i.카테고리}</span>
               ${i.구입처 ? `<span class="shopping-item-shop">${i.구입처}</span>` : ''}
             </div>
@@ -198,8 +198,7 @@
           <div class="shopping-banner-title" style="color:var(--yellow)">🟡 곧 살 때 됨 (${soon.length}개)</div>
           ${soon.map(i => `
             <div class="shopping-item" style="border-bottom-color:#faefc0">
-              <span class="shopping-item-name">${i.이름}</span>
-              ${i.재고수 !== null ? `<span style="font-size:11px;color:var(--ink-light);font-weight:500">📦 ${i.재고수}</span>` : ''}
+              <span class="shopping-item-name">${i.이름}${i.재고수 !== null ? ` <span class="shopping-item-stock">📦 ${i.재고수}</span>` : ''}</span>
               <span class="shopping-item-cat">${i.카테고리}</span>
               ${i.구입처 ? `<span class="shopping-item-shop">${i.구입처}</span>` : ''}
             </div>
