@@ -24,6 +24,7 @@
     --sage: #7a9e7e;
     --sage-light: #b5cfb7;
     --butter: #e8c96e;
+    --gold: #e6b800;
     --border: #e0d5c8;
     --shadow: rgba(28,23,20,0.08);
   }
@@ -35,11 +36,24 @@
   .site-title { font-family: 'DM Serif Display', serif; font-size: 22px; color: var(--terracotta); letter-spacing: -0.5px; }
   .site-subtitle { font-family: 'Noto Serif KR', serif; font-size: 11px; color: var(--ink-muted); font-weight: 300; }
 
-  .search-wrap { position: relative; margin-bottom: 14px; }
+  .search-wrap { position: relative; margin-bottom: 14px; display: flex; gap: 8px; align-items: center; }
+  .search-input-wrap { position: relative; flex: 1; }
   .search-input { width: 100%; padding: 10px 16px 10px 38px; border: 1.5px solid var(--border); border-radius: 24px; background: var(--cream); font-family: 'Noto Sans KR', sans-serif; font-size: 13px; color: var(--ink); outline: none; transition: border-color 0.2s; }
   .search-input::placeholder { color: var(--ink-muted); }
   .search-input:focus { border-color: var(--terracotta); }
   .search-icon { position: absolute; left: 12px; top: 50%; transform: translateY(-50%); color: var(--ink-muted); font-size: 15px; }
+
+  /* 즐겨찾기 토글 (검색바 우측) */
+  .fav-toggle { flex-shrink: 0; width: 40px; height: 40px; border-radius: 50%; border: 1.5px solid var(--border); background: var(--cream); cursor: pointer; display: flex; align-items: center; justify-content: center; font-size: 18px; color: var(--ink-muted); transition: all 0.18s; padding: 0; }
+  .fav-toggle:hover { border-color: var(--gold); color: var(--gold); }
+  .fav-toggle.active { background: var(--gold); border-color: var(--gold); color: white; }
+
+  /* 카드 별 버튼 (우상단) */
+  .fav-btn { position: absolute; top: 8px; right: 8px; width: 28px; height: 28px; border-radius: 50%; border: none; background: rgba(253,250,245,0.85); cursor: pointer; display: flex; align-items: center; justify-content: center; font-size: 15px; color: var(--ink-muted); transition: all 0.15s; z-index: 2; padding: 0; }
+  .fav-btn:hover { background: var(--warm-white); transform: scale(1.1); }
+  .fav-btn.active { color: var(--gold); }
+  /* 별 있을 때 "📖 레시피" 뱃지 위치 살짝 아래로 */
+  .recipe-card .has-recipe-badge { top: 42px; }
 
   .filter-section { margin-bottom: 4px; }
   .filter-label { font-size: 10px; color: var(--ink-muted); letter-spacing: 0.5px; font-weight: 500; margin-bottom: 6px; padding-left: 2px; }
@@ -128,8 +142,11 @@
     <span class="site-subtitle">2025.8 — 2026.5</span>
   </div>
   <div class="search-wrap">
-    <span class="search-icon">🔍</span>
-    <input class="search-input" type="text" placeholder="요리 이름, 재료로 검색..." id="searchInput" oninput="handleSearch()">
+    <div class="search-input-wrap">
+      <span class="search-icon">🔍</span>
+      <input class="search-input" type="text" placeholder="요리 이름, 재료로 검색..." id="searchInput" oninput="handleSearch()">
+    </div>
+    <button class="fav-toggle" id="favToggleBtn" onclick="toggleFavFilter()" title="즐겨찾기만 보기" aria-label="즐겨찾기만 보기">★</button>
   </div>
   <div id="recipeFilters">
     <div class="filter-section">
@@ -188,6 +205,36 @@
   let currentCat = 'all';
   let currentIng = 'all';
   let searchQuery = '';
+  let showFavOnly = false;
+
+  // ===== 즐겨찾기 (localStorage) =====
+  const FAV_KEY = 'cooking-diary-favorites';
+  function loadFavs() {
+    try {
+      const raw = localStorage.getItem(FAV_KEY);
+      return new Set(raw ? JSON.parse(raw) : []);
+    } catch { return new Set(); }
+  }
+  let favorites = loadFavs();
+  function saveFavs() {
+    localStorage.setItem(FAV_KEY, JSON.stringify([...favorites]));
+  }
+  function isFav(id) { return favorites.has(id); }
+  function toggleFav(id, e) {
+    if (e) e.stopPropagation(); // 카드 클릭으로 모달 열리는 거 방지
+    if (favorites.has(id)) favorites.delete(id);
+    else favorites.add(id);
+    saveFavs();
+    render();
+  }
+  function toggleFavFilter() {
+    showFavOnly = !showFavOnly;
+    const btn = document.getElementById('favToggleBtn');
+    btn.classList.toggle('active', showFavOnly);
+    btn.title = showFavOnly ? '전체 보기' : '즐겨찾기만 보기';
+    render();
+  }
+  // ===================================
 
   const CAT_FILTERS = [
     { key: 'all', label: '전체' },
@@ -289,6 +336,8 @@
     document.getElementById('recipeView').style.display = tab === 'recipe' ? '' : 'none';
     document.getElementById('diaryView').style.display = tab === 'diary' ? '' : 'none';
     document.getElementById('recipeFilters').style.display = tab === 'recipe' ? '' : 'none';
+    // 별 토글 버튼은 레시피 탭에서만 표시
+    document.getElementById('favToggleBtn').style.display = tab === 'recipe' ? '' : 'none';
     renderCatFilters(); renderIngFilters(); renderActiveChips(); render();
   }
 
@@ -303,6 +352,7 @@
 
   function renderRecipes() {
     let items = DATA.recipes;
+    if (showFavOnly) items = items.filter(r => favorites.has(r.id));
     if (currentCat !== 'all') items = items.filter(r => r.category === currentCat);
     if (currentIng !== 'all') items = items.filter(r => matchIng(r, currentIng));
     if (searchQuery) {
@@ -321,16 +371,20 @@
       });
     }
 
-    document.getElementById('resultInfo').textContent = `${items.length}개의 요리`;
+    document.getElementById('resultInfo').textContent =
+      (showFavOnly ? '⭐ 즐겨찾기 ' : '') + `${items.length}개의 요리`;
     const grid = document.getElementById('recipeGrid');
 
     if (items.length === 0) {
-      grid.innerHTML = `<div class="empty"><div class="empty-emoji">🥄</div><div class="empty-text">검색 결과가 없어요</div></div>`;
+      const emoji = showFavOnly ? '⭐' : '🥄';
+      const msg = showFavOnly ? '즐겨찾기한 요리가 없어요<br><span style="font-size:12px">카드의 별을 눌러 추가해보세요</span>' : '검색 결과가 없어요';
+      grid.innerHTML = `<div class="empty"><div class="empty-emoji">${emoji}</div><div class="empty-text">${msg}</div></div>`;
       return;
     }
 
     grid.innerHTML = items.map(r => `
       <div class="recipe-card" onclick="openRecipeModal(${r.id})">
+        <button class="fav-btn ${isFav(r.id) ? 'active' : ''}" onclick="toggleFav(${r.id}, event)" aria-label="즐겨찾기" title="즐겨찾기">${isFav(r.id) ? '★' : '☆'}</button>
         ${r.recipe ? '<span class="has-recipe-badge">📖 레시피</span>' : ''}
         <div class="card-category">${r.category}</div>
         <div class="card-name">${r.name}</div>
@@ -412,6 +466,7 @@
     document.getElementById('recipeView').style.display = 'none';
     document.getElementById('diaryView').style.display = '';
     document.getElementById('recipeFilters').style.display = 'none';
+    document.getElementById('favToggleBtn').style.display = 'none';
     renderCatFilters(); renderIngFilters(); renderActiveChips(); renderDiary();
     // 해당 날짜 일기 모달 열기
     setTimeout(() => openDiaryModal(date), 100);
