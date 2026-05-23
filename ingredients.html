@@ -186,6 +186,7 @@
           ${noStock.map(i => `
             <div class="shopping-item">
               <span class="shopping-item-name">${i.이름}</span>
+              ${i.재고수 !== null ? `<span style="font-size:11px;color:var(--ink-light);font-weight:500">📦 ${i.재고수}</span>` : ''}
               <span class="shopping-item-cat">${i.카테고리}</span>
               ${i.구입처 ? `<span class="shopping-item-shop">${i.구입처}</span>` : ''}
             </div>
@@ -198,6 +199,7 @@
           ${soon.map(i => `
             <div class="shopping-item" style="border-bottom-color:#faefc0">
               <span class="shopping-item-name">${i.이름}</span>
+              ${i.재고수 !== null ? `<span style="font-size:11px;color:var(--ink-light);font-weight:500">📦 ${i.재고수}</span>` : ''}
               <span class="shopping-item-cat">${i.카테고리}</span>
               ${i.구입처 ? `<span class="shopping-item-shop">${i.구입처}</span>` : ''}
             </div>
@@ -239,6 +241,7 @@
               <div class="ingredient-info">
                 <div class="ingredient-name">${i.이름}</div>
                 <div class="ingredient-meta">
+                  ${i.재고수 !== null ? `<span style="color:var(--ink);font-weight:500">📦 ${i.재고수}</span>` : ''}
                   ${i.구입처 ? `<span class="ingredient-shop">${i.구입처}</span>` : ''}
                   ${i.가격 ? `<span class="ingredient-price">${i.가격}</span>` : ''}
                   ${i.마지막구매일 ? `<span style="color:var(--ink-muted)">📅 ${i.마지막구매일}</span>` : ''}
