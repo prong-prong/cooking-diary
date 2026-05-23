@@ -265,7 +265,7 @@
   }
 
   // 데이터 로드
-  fetch('/.netlify/functions/ingredients')
+  fetch('/api/ingredients')
     .then(r => r.json())
     .then(data => {
       allItems = data;
