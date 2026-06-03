@@ -274,15 +274,27 @@
   }
 
   // 데이터 로드
-  fetch('/api/ingredients')
-    .then(r => r.json())
-    .then(data => {
-      allItems = data;
-      render();
-    })
-    .catch(() => {
-      document.getElementById('main').innerHTML = `<div class="error">데이터를 불러오지 못했어요 😢<br>잠시 후 다시 시도해주세요</div>`;
-    });
+  function loadIngredients() {
+    document.getElementById('main').innerHTML =
+      `<div class="loading"><div class="loading-emoji">🥄</div><div>식재료 불러오는 중...</div></div>`;
+    fetch('/api/ingredients', { cache: 'no-store' })
+      .then(r => {
+        if (!r.ok) throw new Error('HTTP ' + r.status);
+        return r.json();
+      })
+      .then(data => {
+        if (!Array.isArray(data)) throw new Error('unexpected response');
+        allItems = data;
+        render();
+      })
+      .catch(() => {
+        document.getElementById('main').innerHTML =
+          `<div class="error">데이터를 불러오지 못했어요 😢<br>잠시 후 다시 시도해주세요
+            <div style="margin-top:14px"><button class="filter-btn" onclick="loadIngredients()">🔄 다시 시도</button></div>
+          </div>`;
+      });
+  }
+  loadIngredients();
 </script>
 </body>
 </html>
