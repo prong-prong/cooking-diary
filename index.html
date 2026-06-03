@@ -242,7 +242,7 @@
   let currentCat = 'all';
   let currentIng = 'all';
   let currentFamily = 'all';
-  let currentTreatType = 'all';
+  let currentTreatType = 'smoothie';
   let diaryYear = 'all';
   let diaryMonth = 'all';
   let searchQuery = '';
@@ -360,9 +360,9 @@
 
   // 스무디·아이스크림 토글
   const TREAT_TYPES = [
-    { key: 'all',      label: '전체' },
-    { key: 'smoothie', label: '🥤 스무디' },
-    { key: 'icecream', label: '🍨 아이스크림' },
+    { key: 'smoothie',  label: '🥤 스무디' },
+    { key: 'icecream',  label: '🍨 아이스크림' },
+    { key: 'favorites', label: '⭐ 즐겨찾기' },
   ];
   function treatLabel(type) {
     const t = TREAT_TYPES.find(x => x.key === type);
@@ -432,7 +432,7 @@
 
   function switchTab(tab, btn) {
     currentTab = tab;
-    currentCat = 'all'; currentIng = 'all'; currentFamily = 'all'; currentTreatType = 'all'; diaryYear = 'all'; diaryMonth = 'all'; searchQuery = '';
+    currentCat = 'all'; currentIng = 'all'; currentFamily = 'all'; currentTreatType = 'smoothie'; diaryYear = 'all'; diaryMonth = 'all'; searchQuery = '';
     document.getElementById('searchInput').value = '';
     document.querySelectorAll('.tab-btn').forEach(b => b.classList.remove('active'));
     btn.classList.add('active');
@@ -569,8 +569,9 @@
   }
 
   function renderTreats() {
+    const favView = currentTreatType === 'favorites';
     let items = [...(DATA.treats || [])];
-    if (currentTreatType !== 'all') items = items.filter(t => t.type === currentTreatType);
+    items = favView ? items.filter(t => isFav(t.id)) : items.filter(t => t.type === currentTreatType);
     if (searchQuery) {
       const q = searchQuery;
       items = items.filter(t => {
@@ -578,14 +579,20 @@
         return text.includes(q);
       });
     }
-    document.getElementById('resultInfo').textContent = `${items.length}개의 레시피`;
+    document.getElementById('resultInfo').textContent =
+      (favView ? '⭐ 즐겨찾기 ' : '') + `${items.length}개의 레시피`;
     const grid = document.getElementById('treatsGrid');
     if (items.length === 0) {
-      grid.innerHTML = `<div class="empty"><div class="empty-emoji">🥤</div><div class="empty-text">아직 기록된 레시피가 없어요</div></div>`;
+      const emoji = favView ? '⭐' : '🥤';
+      const msg = favView
+        ? '즐겨찾기한 레시피가 없어요<br><span style="font-size:12px">카드의 별을 눌러 추가해보세요</span>'
+        : '아직 기록된 레시피가 없어요';
+      grid.innerHTML = `<div class="empty"><div class="empty-emoji">${emoji}</div><div class="empty-text">${msg}</div></div>`;
       return;
     }
     grid.innerHTML = items.map(t => `
       <div class="recipe-card" onclick="openTreatModal('${t.id}')">
+        <button class="fav-btn ${isFav(t.id) ? 'active' : ''}" onclick="toggleFav('${t.id}', event)" aria-label="즐겨찾기" title="즐겨찾기">${isFav(t.id) ? '★' : '☆'}</button>
         <span class="has-recipe-badge">📖 레시피</span>
         <div class="card-category ${t.type}">${treatLabel(t.type)}</div>
         <div class="card-name">${t.name}</div>
