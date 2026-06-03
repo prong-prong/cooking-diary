@@ -48,6 +48,12 @@
   .fav-toggle:hover { border-color: var(--gold); color: var(--gold); }
   .fav-toggle.active { background: var(--gold); border-color: var(--gold); color: white; }
 
+  /* 필터 펼치기/접기 토글 (검색바 우측) */
+  .filter-toggle { flex-shrink: 0; width: 40px; height: 40px; border-radius: 50%; border: 1.5px solid var(--border); background: var(--cream); cursor: pointer; display: flex; align-items: center; justify-content: center; color: var(--ink-muted); transition: all 0.18s; padding: 0; }
+  .filter-toggle:hover { border-color: var(--terracotta); color: var(--terracotta); }
+  .filter-toggle.active { background: var(--terracotta); border-color: var(--terracotta); color: #fff; }
+  .filter-toggle svg { width: 18px; height: 18px; display: block; pointer-events: none; }
+
   /* 카드 별 버튼 (우상단) */
   .fav-btn { position: absolute; top: 8px; right: 8px; width: 28px; height: 28px; border-radius: 50%; border: none; background: rgba(253,250,245,0.85); cursor: pointer; display: flex; align-items: center; justify-content: center; font-size: 15px; color: var(--ink-muted); transition: all 0.15s; z-index: 2; padding: 0; }
   .fav-btn:hover { background: var(--warm-white); transform: scale(1.1); }
@@ -140,6 +146,14 @@
   .series-name { font-size: 13px; font-weight: 500; color: #5c4378; margin-bottom: 2px; }
   .series-date { font-size: 11px; color: #8a6cad; }
   .diary-full { font-size: 14px; color: var(--ink-light); line-height: 1.9; font-family: 'Noto Serif KR', serif; font-weight: 300; }
+
+  /* 스무디·아이스크림 토글 */
+  .treat-toggle { display: flex; gap: 8px; margin-bottom: 14px; }
+  .treat-toggle button { flex: 1; padding: 8px; border-radius: 12px; border: 1.5px solid var(--border); background: var(--warm-white); font-family: 'Noto Sans KR', sans-serif; font-size: 13px; color: var(--ink-light); cursor: pointer; transition: all 0.18s; }
+  .treat-toggle button:hover { border-color: var(--terracotta); color: var(--terracotta); }
+  .treat-toggle button.active { background: var(--terracotta); border-color: var(--terracotta); color: #fff; }
+  .card-category.smoothie { color: var(--sage); }
+  .card-category.icecream { color: #c77da0; }
 </style>
 </head>
 <body>
@@ -154,6 +168,9 @@
       <span class="search-icon">🔍</span>
       <input class="search-input" type="text" placeholder="요리 이름, 재료로 검색..." id="searchInput" oninput="handleSearch()">
     </div>
+    <button class="filter-toggle" id="filterToggleBtn" onclick="toggleFilters()" title="필터 펼치기/접기" aria-label="필터 펼치기/접기">
+      <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><polygon points="21 4 3 4 10 12.5 10 19 14 21 14 12.5 21 4"/></svg>
+    </button>
     <button class="fav-toggle" id="favToggleBtn" onclick="toggleFavFilter()" title="즐겨찾기만 보기" aria-label="즐겨찾기만 보기">★</button>
   </div>
   <div id="recipeFilters">
@@ -173,6 +190,7 @@
   <div class="tabs">
     <button class="tab-btn active" onclick="switchTab('recipe', this)">🍳 레시피</button>
     <button class="tab-btn" onclick="switchTab('diary', this)">📝 일기</button>
+    <button class="tab-btn" onclick="switchTab('treats', this)">🥤 스무디·아이스크림</button>
     <a href="ingredients.html" class="tab-btn" style="text-decoration:none;display:flex;align-items:center;justify-content:center;">🛒 식재료</a>
   </div>
 </header>
@@ -181,7 +199,14 @@
   <div id="activeFiltersDisplay" class="active-filters"></div>
   <div class="result-info" id="resultInfo"></div>
   <div id="recipeView"><div class="recipe-grid" id="recipeGrid"></div></div>
-  <div id="diaryView" style="display:none;"><div class="diary-list" id="diaryList"></div></div>
+  <div id="diaryView" style="display:none;">
+    <div id="diaryPeriod"></div>
+    <div class="diary-list" id="diaryList"></div>
+  </div>
+  <div id="treatsView" style="display:none;">
+    <div class="treat-toggle" id="treatToggle"></div>
+    <div class="recipe-grid" id="treatsGrid"></div>
+  </div>
 </main>
 
 <div class="modal-overlay" id="recipeModal" onclick="closeModal('recipeModal', event)">
@@ -217,6 +242,9 @@
   let currentCat = 'all';
   let currentIng = 'all';
   let currentFamily = 'all';
+  let currentTreatType = 'all';
+  let diaryYear = 'all';
+  let diaryMonth = 'all';
   let searchQuery = '';
   let showFavOnly = false;
 
@@ -248,6 +276,26 @@
     render();
   }
   // ===================================
+
+  // ===== 필터 펼치기/접기 (localStorage 기억) =====
+  const FILTERS_PREF_KEY = 'cooking-diary-show-filters';
+  let showFilters = (() => {
+    try { return localStorage.getItem(FILTERS_PREF_KEY) === '1'; } catch { return false; }
+  })();
+  function applyFilterVisibility() {
+    const onRecipe = currentTab === 'recipe';
+    document.getElementById('recipeFilters').style.display = (onRecipe && showFilters) ? '' : 'none';
+    const btn = document.getElementById('filterToggleBtn');
+    btn.style.display = onRecipe ? '' : 'none';
+    btn.classList.toggle('active', showFilters);
+    btn.title = showFilters ? '필터 접기' : '필터 펼치기';
+  }
+  function toggleFilters() {
+    showFilters = !showFilters;
+    try { localStorage.setItem(FILTERS_PREF_KEY, showFilters ? '1' : '0'); } catch {}
+    applyFilterVisibility();
+  }
+  // ===============================================
 
   const CAT_FILTERS = [
     { key: 'all', label: '전체' },
@@ -308,6 +356,17 @@
   function matchFamily(recipe, key) {
     if (key === 'all') return true;
     return (recipe.family || []).includes(key);
+  }
+
+  // 스무디·아이스크림 토글
+  const TREAT_TYPES = [
+    { key: 'all',      label: '전체' },
+    { key: 'smoothie', label: '🥤 스무디' },
+    { key: 'icecream', label: '🍨 아이스크림' },
+  ];
+  function treatLabel(type) {
+    const t = TREAT_TYPES.find(x => x.key === type);
+    return t ? t.label : type;
   }
 
   function matchIng(recipe, key) {
@@ -373,17 +432,56 @@
 
   function switchTab(tab, btn) {
     currentTab = tab;
-    currentCat = 'all'; currentIng = 'all'; currentFamily = 'all'; searchQuery = '';
+    currentCat = 'all'; currentIng = 'all'; currentFamily = 'all'; currentTreatType = 'all'; diaryYear = 'all'; diaryMonth = 'all'; searchQuery = '';
     document.getElementById('searchInput').value = '';
     document.querySelectorAll('.tab-btn').forEach(b => b.classList.remove('active'));
     btn.classList.add('active');
     document.getElementById('recipeView').style.display = tab === 'recipe' ? '' : 'none';
     document.getElementById('diaryView').style.display = tab === 'diary' ? '' : 'none';
-    document.getElementById('recipeFilters').style.display = tab === 'recipe' ? '' : 'none';
+    document.getElementById('treatsView').style.display = tab === 'treats' ? '' : 'none';
+    // 필터 패널·토글 버튼은 레시피 탭에서만, 펼침 상태 반영
+    applyFilterVisibility();
     // 별 토글 버튼은 레시피 탭에서만 표시
     document.getElementById('favToggleBtn').style.display = tab === 'recipe' ? '' : 'none';
-    renderCatFilters(); renderIngFilters(); renderFamilyFilters(); renderActiveChips(); render();
+    renderCatFilters(); renderIngFilters(); renderFamilyFilters(); renderTreatToggle(); renderDiaryPeriod(); renderActiveChips(); render();
   }
+
+  function renderTreatToggle() {
+    document.getElementById('treatToggle').innerHTML = TREAT_TYPES.map(t =>
+      `<button class="${currentTreatType === t.key ? 'active' : ''}" onclick="setTreatType('${t.key}')">${t.label}</button>`
+    ).join('');
+  }
+  function setTreatType(key) { currentTreatType = key; renderTreatToggle(); render(); }
+
+  // 일기 기간 토글 (전체 → 연도 → 월 드릴다운)
+  function diaryYears() {
+    return [...new Set(DATA.diary.map(d => d.date.split('.')[0]))].sort((a, b) => b - a);
+  }
+  function diaryMonths(year) {
+    return [...new Set(DATA.diary
+      .filter(d => d.date.split('.')[0] === year)
+      .map(d => Number(d.date.split('.')[1])))]
+      .sort((a, b) => b - a);
+  }
+  function renderDiaryPeriod() {
+    let html = '<div class="treat-toggle">';
+    html += `<button class="${diaryYear === 'all' ? 'active' : ''}" onclick="setDiaryYear('all')">전체</button>`;
+    diaryYears().forEach(y => {
+      html += `<button class="${diaryYear === y ? 'active' : ''}" onclick="setDiaryYear('${y}')">${y}년</button>`;
+    });
+    html += '</div>';
+    if (diaryYear !== 'all') {
+      html += '<div class="filter-row" style="margin-bottom:12px">';
+      html += `<button class="filter-btn ${diaryMonth === 'all' ? 'active' : ''}" onclick="setDiaryMonth('all')">${diaryYear}년 전체</button>`;
+      diaryMonths(diaryYear).forEach(m => {
+        html += `<button class="filter-btn ${diaryMonth === String(m) ? 'active' : ''}" onclick="setDiaryMonth('${m}')">${m}월</button>`;
+      });
+      html += '</div>';
+    }
+    document.getElementById('diaryPeriod').innerHTML = html;
+  }
+  function setDiaryYear(y) { diaryYear = y; diaryMonth = 'all'; renderDiaryPeriod(); render(); }
+  function setDiaryMonth(m) { diaryMonth = m; renderDiaryPeriod(); render(); }
 
   function handleSearch() {
     searchQuery = document.getElementById('searchInput').value;
@@ -391,7 +489,9 @@
   }
 
   function render() {
-    currentTab === 'recipe' ? renderRecipes() : renderDiary();
+    if (currentTab === 'recipe') renderRecipes();
+    else if (currentTab === 'diary') renderDiary();
+    else renderTreats();
   }
 
   // "2025.8.18" → Date 객체 (정렬용)
@@ -451,6 +551,8 @@
 
   function renderDiary() {
     let items = [...DATA.diary].sort((a, b) => parseDate(b.date) - parseDate(a.date));
+    if (diaryYear !== 'all') items = items.filter(d => d.date.split('.')[0] === diaryYear);
+    if (diaryMonth !== 'all') items = items.filter(d => Number(d.date.split('.')[1]) === Number(diaryMonth));
     if (searchQuery) items = items.filter(d => d.content.includes(searchQuery) || d.date.includes(searchQuery));
     document.getElementById('resultInfo').textContent = `${items.length}개의 일기`;
     const list = document.getElementById('diaryList');
@@ -464,6 +566,68 @@
         <div class="diary-preview">${d.content}</div>
       </div>
     `).join('');
+  }
+
+  function renderTreats() {
+    let items = [...(DATA.treats || [])];
+    if (currentTreatType !== 'all') items = items.filter(t => t.type === currentTreatType);
+    if (searchQuery) {
+      const q = searchQuery;
+      items = items.filter(t => {
+        const text = [t.name, t.memo || '', ...(t.tags || []), ...(t.recipe?.ingredients || []), ...(t.recipe?.steps || [])].join(' ');
+        return text.includes(q);
+      });
+    }
+    document.getElementById('resultInfo').textContent = `${items.length}개의 레시피`;
+    const grid = document.getElementById('treatsGrid');
+    if (items.length === 0) {
+      grid.innerHTML = `<div class="empty"><div class="empty-emoji">🥤</div><div class="empty-text">아직 기록된 레시피가 없어요</div></div>`;
+      return;
+    }
+    grid.innerHTML = items.map(t => `
+      <div class="recipe-card" onclick="openTreatModal('${t.id}')">
+        <span class="has-recipe-badge">📖 레시피</span>
+        <div class="card-category ${t.type}">${treatLabel(t.type)}</div>
+        <div class="card-name">${t.name}</div>
+        ${t.date ? `<div class="card-date">${t.date}</div>` : ''}
+        <div class="card-memo">${t.memo || ''}</div>
+        <div class="card-tags">${(t.tags || []).slice(0, 3).map(x => `<span class="tag">${x}</span>`).join('')}</div>
+      </div>
+    `).join('');
+  }
+
+  function openTreatModal(id) {
+    const t = (DATA.treats || []).find(x => x.id === id);
+    if (!t) return;
+    document.getElementById('modalCategory').textContent = treatLabel(t.type);
+    document.getElementById('modalIngBadge').textContent = '';
+    document.getElementById('modalTitle').textContent = t.name;
+    document.getElementById('modalDate').textContent = t.date || '';
+
+    let body = '';
+    if (t.memo) body += `<div class="modal-memo">${t.memo}</div>`;
+    if (t.tags?.length) body += `<div class="card-tags" style="margin-bottom:16px">${t.tags.map(x => `<span class="tag">${x}</span>`).join('')}</div>`;
+
+    const rc = t.recipe || {};
+    if (rc.ingredients?.length) {
+      body += `
+        <div class="section-title">🧺 재료</div>
+        <div class="ingredient-list">${rc.ingredients.map(i => `<span class="ingredient-chip">${i}</span>`).join('')}</div>`;
+    }
+    if (rc.setting) {
+      body += `
+        <div class="section-title">⚙️ 기기 · 모드</div>
+        <div class="modal-memo" style="border-left-color:var(--sage)">${rc.setting}</div>`;
+    }
+    if (rc.steps?.length) {
+      body += `
+        <div class="section-title">만드는 법</div>
+        <ul class="step-list">${rc.steps.map((s, i) => `<li class="step-item"><span class="step-num">${i + 1}</span><span>${s}</span></li>`).join('')}</ul>`;
+    }
+    if (rc.tip) body += `<div class="tip-box"><div class="tip-label">💡 메모</div>${rc.tip}</div>`;
+
+    document.getElementById('modalBody').innerHTML = body;
+    document.getElementById('recipeModal').classList.add('open');
   }
 
   function openRecipeModal(id) {
@@ -559,6 +723,7 @@
   renderCatFilters();
   renderIngFilters();
   renderFamilyFilters();
+  applyFilterVisibility();
   render();
 
   if ('serviceWorker' in navigator) {
