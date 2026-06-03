@@ -242,7 +242,7 @@
   let currentCat = 'all';
   let currentIng = 'all';
   let currentFamily = 'all';
-  let currentTreatType = 'smoothie';
+  let currentTreatType = 'favorites';
   let diaryYear = 'all';
   let diaryMonth = 'all';
   let searchQuery = '';
@@ -432,7 +432,7 @@
 
   function switchTab(tab, btn) {
     currentTab = tab;
-    currentCat = 'all'; currentIng = 'all'; currentFamily = 'all'; currentTreatType = 'smoothie'; diaryYear = 'all'; diaryMonth = 'all'; searchQuery = '';
+    currentCat = 'all'; currentIng = 'all'; currentFamily = 'all'; currentTreatType = 'favorites'; diaryYear = 'all'; diaryMonth = 'all'; searchQuery = '';
     document.getElementById('searchInput').value = '';
     document.querySelectorAll('.tab-btn').forEach(b => b.classList.remove('active'));
     btn.classList.add('active');
