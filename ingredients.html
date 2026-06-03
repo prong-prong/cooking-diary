@@ -76,6 +76,7 @@
   .stock-충분 { background: var(--green); }
   .stock-곧 { background: var(--yellow); }
   .stock-없음 { background: var(--red); }
+  .stock-보류 { background: var(--ink-muted); }
 
   .ingredient-info { flex: 1; min-width: 0; }
   .ingredient-name { font-size: 14px; font-weight: 500; color: var(--ink); margin-bottom: 2px; }
@@ -88,6 +89,7 @@
   .badge-충분 { background: #eef7f1; color: var(--green); }
   .badge-곧 { background: #fef9ec; color: var(--yellow); }
   .badge-없음 { background: #fff0f0; color: var(--red); }
+  .badge-보류 { background: #efeae3; color: var(--ink-muted); }
 
   .ingredient-memo { font-size: 11px; color: var(--ink-muted); margin-top: 4px; line-height: 1.4; }
   .ingredient-link { font-size: 11px; color: var(--terracotta); text-decoration: none; }
@@ -116,11 +118,13 @@
     <button class="filter-btn shop-btn active" onclick="setFilter('shop')">🛒 쇼핑 필요</button>
     <button class="filter-btn active" onclick="setFilter('all')">전체</button>
     <button class="filter-btn" onclick="setFilter('소스·양념')">🧂 소스·양념</button>
-    <button class="filter-btn" onclick="setFilter('고기·생선')">🥩 고기·생선</button>
+    <button class="filter-btn" onclick="setFilter('고기')">🥩 고기</button>
+    <button class="filter-btn" onclick="setFilter('생선')">🐟 생선</button>
     <button class="filter-btn" onclick="setFilter('채소·나물')">🥬 채소·나물</button>
     <button class="filter-btn" onclick="setFilter('오일·식초')">🫙 오일·식초</button>
     <button class="filter-btn" onclick="setFilter('육수·베이스')">🍲 육수·베이스</button>
     <button class="filter-btn" onclick="setFilter('유제품·대체유')">🥛 유제품·대체유</button>
+    <button class="filter-btn" onclick="setFilter('면·가루')">🍜 면·가루</button>
     <button class="filter-btn" onclick="setFilter('기타')">📦 기타</button>
   </div>
 </header>
@@ -137,8 +141,8 @@
   let currentFilter = 'shop';
 
   const CAT_ICONS = {
-    '소스·양념': '🧂', '고기·생선': '🥩', '채소·나물': '🥬',
-    '오일·식초': '🫙', '육수·베이스': '🍲', '유제품·대체유': '🥛', '기타': '📦'
+    '소스·양념': '🧂', '고기': '🥩', '생선': '🐟', '채소·나물': '🥬',
+    '오일·식초': '🫙', '육수·베이스': '🍲', '유제품·대체유': '🥛', '면·가루': '🍜', '기타': '📦'
   };
 
   function setFilter(key) {
@@ -158,12 +162,14 @@
   function stockClass(s) {
     if (s.includes('충분')) return '충분';
     if (s.includes('곧')) return '곧';
+    if (s.includes('보류')) return '보류';
     return '없음';
   }
 
   function stockBadgeText(s) {
     if (s.includes('충분')) return '🟢 충분';
     if (s.includes('곧')) return '🟡 곧 살 때 됨';
+    if (s.includes('보류')) return '⚪ 보류';
     return '🔴 없음';
   }
 
@@ -172,7 +178,8 @@
     let items = allItems;
 
     if (currentFilter === 'shop') {
-      items = items.filter(i => !i.재고상태.includes('충분'));
+      // 보류 = 구매의사 없음 → 쇼핑 목록에서 제외
+      items = items.filter(i => !i.재고상태.includes('충분') && !i.재고상태.includes('보류'));
       if (items.length === 0) {
         main.innerHTML = `<div class="loading"><div style="font-size:36px">🎉</div><div style="margin-top:10px;font-size:14px;color:var(--ink-light)">살 게 없어요! 재고 충분!</div></div>`;
         return;
