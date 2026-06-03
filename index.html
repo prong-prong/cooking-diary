@@ -200,7 +200,7 @@
   </div>
 </div>
 
-<div class="modal-overlay" id="diaryModal" onclick="closeModal('diaryModal', event)">
+<div class="modal-overlay" id="diaryModal" style="z-index:201;" onclick="closeModal('diaryModal', event)">
   <div class="modal">
     <div class="modal-handle"></div>
     <div class="modal-header">
@@ -394,8 +394,14 @@
     currentTab === 'recipe' ? renderRecipes() : renderDiary();
   }
 
+  // "2025.8.18" → Date 객체 (정렬용)
+  function parseDate(s) {
+    const [y, m, d] = s.split('.').map(Number);
+    return new Date(y, m - 1, d);
+  }
+
   function renderRecipes() {
-    let items = DATA.recipes;
+    let items = [...DATA.recipes].sort((a, b) => parseDate(b.date) - parseDate(a.date));
     if (showFavOnly) items = items.filter(r => favorites.has(r.id));
     if (currentCat !== 'all') items = items.filter(r => r.category === currentCat);
     if (currentIng !== 'all') items = items.filter(r => matchIng(r, currentIng));
@@ -444,7 +450,7 @@
   }
 
   function renderDiary() {
-    let items = DATA.diary;
+    let items = [...DATA.diary].sort((a, b) => parseDate(b.date) - parseDate(a.date));
     if (searchQuery) items = items.filter(d => d.content.includes(searchQuery) || d.date.includes(searchQuery));
     document.getElementById('resultInfo').textContent = `${items.length}개의 일기`;
     const list = document.getElementById('diaryList');
@@ -533,21 +539,9 @@
   }
 
   function jumpToDiary(date) {
-    // 레시피 모달 닫기
-    document.getElementById('recipeModal').classList.remove('open');
-    // 일기 탭으로 전환
-    currentTab = 'diary';
-    currentCat = 'all'; currentIng = 'all'; currentFamily = 'all'; searchQuery = '';
-    document.getElementById('searchInput').value = '';
-    document.querySelectorAll('.tab-btn').forEach(b => b.classList.remove('active'));
-    document.querySelectorAll('.tab-btn')[1].classList.add('active');
-    document.getElementById('recipeView').style.display = 'none';
-    document.getElementById('diaryView').style.display = '';
-    document.getElementById('recipeFilters').style.display = 'none';
-    document.getElementById('favToggleBtn').style.display = 'none';
-    renderCatFilters(); renderIngFilters(); renderFamilyFilters(); renderActiveChips(); renderDiary();
-    // 해당 날짜 일기 모달 열기
-    setTimeout(() => openDiaryModal(date), 100);
+    // 레시피 모달은 그대로 두고, 일기 모달만 위에 띄운다.
+    // 일기 모달을 닫으면 자연스럽게 레시피 모달로 돌아감.
+    openDiaryModal(date);
   }
 
   function openDiaryModal(date) {
